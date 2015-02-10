@@ -10,89 +10,110 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-enum DownloadStatus { IDLE, PROCESSING, INVALID_URL, EMPTY_OR_INVALID_DATA, OK }
+enum DownloadStatus { IDLE, PROCESSING, INVALID_URL, EMPTY_OR_INVALID, OK }
 
-public class GetRawData extends AsyncTask<String, Void, String> {
+public class GetRawData {
 
     private final String LOG_TAG = GetRawData.class.getSimpleName();
-    private String mRawUrl;
-    private String mRawData;
-    private DownloadStatus mDownloadStatus;
+    protected String mRawUrl;
+    protected String mRawData;
+    protected String mMethodType;
+    protected DownloadStatus mDownloadStatus;
 
-    public GetRawData(String rawUrl) {
-        mRawUrl = rawUrl;
-    }
 
     public String getRawData() {
         return mRawData;
+    }
+
+    public void setRawUrl(String rawUrl) {
+        mRawUrl = rawUrl;
     }
 
     public DownloadStatus getDownloadStatus() {
         return mDownloadStatus;
     }
 
+    public void setMethodType(String methodType) {
+        mMethodType = methodType;
+    }
 
-    @Override
-    protected String doInBackground(String... params) {
+    public GetRawData(String mRawUrl) {
+        this.mRawUrl = mRawUrl;
+        this.mDownloadStatus = DownloadStatus.IDLE;
+        this.mMethodType = "GET";
+    }
 
-        HttpURLConnection urlConnection = null;
-        BufferedReader bufferedReader = null;
+    public void execute() {
+        mDownloadStatus = DownloadStatus.PROCESSING;
+        DownloadRawData downloadRawData = new DownloadRawData();
+        downloadRawData.execute(mRawUrl);
+    }
 
-        try {
-            URL url = new URL(params[0]);
+    // Async Task
+    public class DownloadRawData extends AsyncTask<String, Void, String> {
 
-            urlConnection = (HttpURLConnection)url.openConnection();
-            urlConnection.setRequestMethod("GET");
-            urlConnection.connect();
+        @Override
+        protected String doInBackground(String... params) {
 
-            InputStream inputStream = urlConnection.getInputStream();
-            if(inputStream == null) {
+            HttpURLConnection urlConnection = null;
+            BufferedReader bufferedReader = null;
+
+            try {
+
+                // Get Url
+                URL url = new URL(params[0]);
+
+                // Create connection
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod(mMethodType);
+                urlConnection.connect();
+
+                InputStream inputStream = urlConnection.getInputStream();
+
+                bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+                StringBuffer stringBuffer = new StringBuffer();
+
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    stringBuffer.append(line + '\n');
+                }
+
+                return stringBuffer.toString();
+
+            } catch (Exception e) {
+                mDownloadStatus = DownloadStatus.IDLE;
+                Log.e(LOG_TAG, "Error", e);
                 return null;
-            }
+            } finally {
+                mDownloadStatus = DownloadStatus.IDLE;
+                if(urlConnection != null)  {
+                    urlConnection.disconnect();
+                }
 
-            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
-            StringBuffer stringBuffer = new StringBuffer();
-
-            String line;
-            while((line = bufferedReader.readLine()) != null) {
-                stringBuffer.append(line + '\n');
-            }
-
-            return stringBuffer.toString();
-
-
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Error", e);
-            return null;
-        } finally {
-            if(urlConnection != null) {
-                urlConnection.disconnect();
-            }
-
-            if(bufferedReader != null) {
-                try {
-                    bufferedReader.close();
-                } catch (final IOException e) {
-                    Log.e(LOG_TAG, "Failed to close input stream", e);
+                if(bufferedReader != null) {
+                    try {
+                        bufferedReader.close();
+                    } catch(final IOException e) {
+                        Log.e(LOG_TAG, "Failed to close stream", e);
+                    }
                 }
             }
         }
-    }
 
-    @Override
-    protected void onPostExecute(String s) {
+        @Override
+        protected void onPostExecute(String s) {
+            mRawData = s;
 
-        Log.v(LOG_TAG, "Returned Data: " + s);
-
-        if(s == null) {
-            if(mRawUrl == null) {
-                mDownloadStatus = DownloadStatus.INVALID_URL;
+            if(mRawData == null) {
+                if(mRawUrl == null) {
+                    mDownloadStatus = DownloadStatus.INVALID_URL;
+                } else {
+                    mDownloadStatus = DownloadStatus.EMPTY_OR_INVALID;
+                }
             } else {
-                mDownloadStatus = DownloadStatus.EMPTY_OR_INVALID_DATA;
+                mDownloadStatus = DownloadStatus.OK;
             }
-        } else {
-            mDownloadStatus = DownloadStatus.OK;
         }
     }
 }

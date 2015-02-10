@@ -7,9 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-/**
- * Created by Dino on 10/02/15.
- */
 public class ForecastFragment extends Fragment {
 
     public ForecastFragment() {
@@ -19,6 +16,10 @@ public class ForecastFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.list_item_forecast, container, false);
+
+
+        GetOpenWeatherData getOpenWeatherData = new GetOpenWeatherData("Mumbai", 7);
+        getOpenWeatherData.execute();
 
         return rootView;
     }
