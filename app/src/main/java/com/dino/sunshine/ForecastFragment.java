@@ -9,10 +9,16 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
-public class ForecastFragment extends Fragment {
+import java.util.ArrayList;
+import java.util.List;
+
+public class ForecastFragment extends Fragment implements GetOpenWeatherDataInterface {
 
     private final String LOG_TAG = ForecastFragment.class.getSimpleName();
+    private ArrayAdapter<String> mWeatherForecastArrayAdapter;
 
     public ForecastFragment() {
 
@@ -27,7 +33,12 @@ public class ForecastFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.list_item_forecast, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
+        mWeatherForecastArrayAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, new ArrayList<String>());
+
+        ListView listView = (ListView)rootView.findViewById(R.id.listview_forecast);
+        listView.setAdapter(mWeatherForecastArrayAdapter);
 
         fetchWeatherData();
 
@@ -36,6 +47,7 @@ public class ForecastFragment extends Fragment {
 
     private void fetchWeatherData() {
         GetOpenWeatherData getOpenWeatherData = new GetOpenWeatherData("Mumbai", 7);
+        getOpenWeatherData.delegate = this;
         getOpenWeatherData.execute();
     }
 
@@ -50,9 +62,19 @@ public class ForecastFragment extends Fragment {
         int id = item.getItemId();
         if(id == R.id.action_refresh) {
             fetchWeatherData();
-            return;
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void weatherDataDownloadComplete(List<DayWeatherForecast> forecasts) {
+        mWeatherForecastArrayAdapter.clear();
+
+        for(DayWeatherForecast dayWeatherForecast: forecasts) {
+            String weatherDesc = dayWeatherForecast.toString();
+            mWeatherForecastArrayAdapter.add(weatherDesc);
+        }
     }
 }
