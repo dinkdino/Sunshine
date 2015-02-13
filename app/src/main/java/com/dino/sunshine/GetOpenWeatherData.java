@@ -1,6 +1,8 @@
 package com.dino.sunshine;
 
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -38,8 +40,9 @@ public class GetOpenWeatherData extends GetRawData {
         return mForecasts;
     }
 
-    public GetOpenWeatherData(String searchCriteria, int numberOfDays) {
+    public GetOpenWeatherData(String searchCriteria, String tempUnit, int numberOfDays) {
         super(null);
+        mUnits = tempUnit;
         mNumberOfDays = numberOfDays > 0 ? Integer.toString(numberOfDays) : "7";
         mForecasts = new ArrayList<DayWeatherForecast>();
 

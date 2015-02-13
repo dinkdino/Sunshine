@@ -1,6 +1,10 @@
 package com.dino.sunshine;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -35,6 +39,12 @@ public class ForecastFragment extends Fragment implements GetOpenWeatherDataInte
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        fetchWeatherData();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
@@ -48,7 +58,11 @@ public class ForecastFragment extends Fragment implements GetOpenWeatherDataInte
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String selectedForecast = mWeatherForecastArrayAdapter.getItem(position);
 
-                Toast.makeText(getActivity(), selectedForecast, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity(), selectedForecast, Toast.LENGTH_SHORT).show();
+
+                Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
+                detailIntent.putExtra(Intent.EXTRA_TEXT, selectedForecast);
+                startActivity(detailIntent);
 
             }
         });
@@ -59,10 +73,20 @@ public class ForecastFragment extends Fragment implements GetOpenWeatherDataInte
     }
 
     private void fetchWeatherData() {
-        GetOpenWeatherData getOpenWeatherData = new GetOpenWeatherData("Mumbai", 7);
+
+        // get location from pref
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = prefs.getString(getString(R.string.preference_key_location), getString(R.string.preference_defaultValue_location));
+
+        // get temp unit from pref
+        String tempUnit = prefs.getString(getString(R.string.preference_key_temperature), getString(R.string.preference_temp_unit_metric));
+
+
+        GetOpenWeatherData getOpenWeatherData = new GetOpenWeatherData(location, tempUnit, 7);
         getOpenWeatherData.delegate = this;
         getOpenWeatherData.execute();
     }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {

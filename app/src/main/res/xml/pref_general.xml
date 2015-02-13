@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:title="@string/preference_title_location"
+        android:key="@string/preference_key_location"
+        android:defaultValue="@string/preference_defaultValue_location"
+        android:inputType="text"
+        android:singleLine="true"/>
+
+    <ListPreference
+        android:title="@string/preference_title_temperature"
+        android:key="@string/preference_key_temperature"
+        android:dialogTitle="@string/preference_dialog_title_temperature"
+        android:entries="@array/preference_temp_units_entries"
+        android:entryValues="@array/preference_temp_units_values"
+        android:defaultValue="@string/preference_temp_unit_metric"/>
+
+</PreferenceScreen>
